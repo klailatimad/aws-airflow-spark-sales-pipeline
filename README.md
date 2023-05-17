@@ -16,8 +16,8 @@
 #### After Lamda sends a signal to Airflow, the Airflow will unpack the data from Lambda as the parameter for EMR.
 
 #### EMR is triggered by Airflow in the preceding step. EMR will use the files in the S3 bucket where raw data is dumped. Pyspark running in EMR will do the following tasks:
-##### Task 1: Read data from S3.
-##### Task 2: Do data transformation process to generate a dataframe to meet the following business requirement.
+###### Task 1: Read data from S3.
+###### Task 2: Do data transformation process to generate a dataframe to meet the following business requirement.
 
 #### Athena and Glue will connect with the output datalake (AWS S3 bucket) to store the final fact and dimensions tables. This helps with standardization as data sources might change in the future.
 
