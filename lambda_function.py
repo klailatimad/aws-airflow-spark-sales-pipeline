@@ -47,7 +47,7 @@ def lambda_handler(event,context):
         print(data)
         endpoint= 'http://ec2-3-86-252-249.compute-1.amazonaws.com:8080/api/v1/dags/midterm_dag/dagRuns'
     
-        subprocess.run(['curl', '-X', 'POST', endpoint, '-H', 'Content-Type: application/json', '--user','klailatimad:password', '-d', data])
+        subprocess.run(['curl', '-X', 'POST', endpoint, '-H', 'Content-Type: application/json', '--user','username:password', '-d', data])
         print('Files are sent to Airflow')
         
     else:
