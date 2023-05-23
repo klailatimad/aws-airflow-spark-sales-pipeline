@@ -1,7 +1,7 @@
 # Portfolio Project:
 ## End to end pipeline using AWS services (S3, Lambda, Cloudwatch, EMR, Glue, Athena) and Apache Airflow to process several files of input and store them for use for next day's usage. This also includes a BI tool, namely Superset, to output the results. 
 
-![Architecture](https://github.com/klailatimad/midterm-project-aws-airflow/assets/122483291/649e2428-4861-47c4-ac69-15bcd895e83e)
+![Architecture_v2](https://github.com/klailatimad/midterm-project-aws-airflow/assets/122483291/cac8e51e-327b-4275-a434-cde354194543)
 
 ### This project was created to show the ability to use different solutions replicating day to day ETL processes. The data is imported daily. The files imported were CSV files with millions of entries.
 
