@@ -107,12 +107,12 @@ next_delivery_dt date
 
 COPY INTO MIDTERM_DB.RAW.inventory FROM @wcd_de_midterm_s3_stage/inventory_mid.csv;
 
-CREATE STORAGE INTEGRATION aws_snowflake_int
+CREATE OR REPLACE STORAGE INTEGRATION aws_snowflake_int
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = 'S3'
   ENABLED = TRUE
   STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::493261504498:role/wcd-midterm-policy'
-  STORAGE_ALLOWED_LOCATIONS = ('s3://wcd-midterm-s3');
+  STORAGE_ALLOWED_LOCATIONS = ('s3://wcd-midterm-s3/raw/');
 
 DESC INTEGRATION aws_snowflake_int;
 
@@ -124,10 +124,10 @@ USE SCHEMA MIDTERM_DB.raw;
 
 CREATE OR REPLACE STAGE my_s3_stage
   STORAGE_INTEGRATION = aws_snowflake_int
-  URL = 's3://wcd-midterm-s3/raw'
-  FILE_FORMAT = csv_comma_skip1_format;
+  URL = 's3://wcd-midterm-s3/raw/';
 
 list @my_s3_stage;
+
 
 --Step 1. Create a procedure to load data from Snowflake table to S3. Here, replace <your s3 stage name> with your stage name.
 CREATE OR REPLACE PROCEDURE COPY_INTO_S3()
@@ -196,73 +196,83 @@ DESCRIBE TASK load_data_to_s3;
 
 
 ----Step 1: Load today's data manually
-copy into '@my_s3_stage/inventory_2023-05-10.csv.gz' from (select * from midterm_db.raw.inventory where cal_dt <= current_date())
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/inventory_2023-06-03.csv.gz' from (select * from midterm_db.raw.inventory where cal_dt <= current_date())
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
 
-copy into '@my_s3_stage/sales_2023-05-10.csv.gz' from (select * from midterm_db.raw.sales where trans_dt <= current_date())
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/sales_2023-06-03.csv.gz' from (select * from midterm_db.raw.sales where trans_dt <= current_date())
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
 
-copy into '@my_s3_stage/store_2023-05-10.csv.gz' from (select * from midterm_db.raw.store)
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/store_2023-06-03.csv.gz' from (select * from midterm_db.raw.store)
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
 
-copy into '@my_s3_stage/product_2023-05-10.csv.gz' from (select * from midterm_db.raw.product)
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/product_2023-06-03.csv.gz' from (select * from midterm_db.raw.product)
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
 
-copy into '@my_s3_stage/calendar_2023-05-10.csv.gz' from (select * from midterm_db.raw.calendar)
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/calendar_2023-06-03.csv.gz' from (select * from midterm_db.raw.calendar)
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
 
 ----Step 2: Load tomorrow's data manually
-copy into '@my_s3_stage/inventory_2023-05-11.csv.gz' from (select * from midterm_db.raw.inventory where cal_dt <= current_date()+1)
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/inventory_2023-06-03.csv.gz' from (select * from midterm_db.raw.inventory where cal_dt <= current_date()+1)
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
 
-copy into '@my_s3_stage/sales_2023-05-11.csv.gz' from (select * from midterm_db.raw.sales where trans_dt <= current_date()+1)
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/sales_2023-06-03.csv.gz' from (select * from midterm_db.raw.sales where trans_dt <= current_date()+1)
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
 
-copy into '@my_s3_stage/store_2023-05-11.csv.gz' from (select * from midterm_db.raw.store)
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/store_2023-06-03.csv.gz' from (select * from midterm_db.raw.store)
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
 
-copy into '@my_s3_stage/product_2023-05-11.csv.gz' from (select * from midterm_db.raw.product)
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/product_2023-06-03.csv.gz' from (select * from midterm_db.raw.product)
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
 
-copy into '@my_s3_stage/calendar_2023-05-11.csv.gz' from (select * from midterm_db.raw.calendar)
-file_format=(FORMAT_NAME=csv_comma_skip1_format, TYPE=CSV, COMPRESSION='None')
+copy into '@my_s3_stage/calendar_2023-06-03.csv.gz' from (select * from midterm_db.raw.calendar)
+file_format=(TYPE=CSV, COMPRESSION='GZIP')
 single = true
 MAX_FILE_SIZE=107772160
 OVERWRITE=TRUE
+HEADER = TRUE
 ;
