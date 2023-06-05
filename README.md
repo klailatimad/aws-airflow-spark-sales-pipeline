@@ -1,5 +1,5 @@
 # Portfolio Project:
-## End to end pipeline using AWS services (S3, Lambda, Cloudwatch, EMR, Glue, Athena) and Apache Airflow to process several files of input and store them for use for next day's usage. This also includes a BI tool, namely Superset, to create a dashboard for visualizing and working on the business requirements. 
+## End to end pipeline using AWS services (S3, Lambda, Cloudwatch, EMR, Glue, Athena) and Apache Airflow to process several files of input using Spark, and have them stored in a bucket for next day's usage and analytics. This also includes a BI tool, namely Apache Superset, to create a dashboard for visualizing and working on the business requirements.
 
 ![Architecture_v3](https://github.com/klailatimad/midterm-project-aws-airflow/assets/122483291/209bd8be-7c92-465d-871a-2360b7aa5717)
 
