@@ -1,62 +1,119 @@
-## End to end pipeline using AWS services (S3, Lambda, Cloudwatch, EMR, Glue, Athena) and Apache Airflow to process several files of input using Spark, and have them stored in a bucket for next day's usage and analytics. This also includes a BI tool, namely Apache Superset, to create a dashboard for visualizing and working on the business requirements.
+# AWS Airflow Spark Sales Pipeline
+
+An end-to-end data pipeline using AWS and Apache Airflow to process sales data, with analytics dashboarding via Apache Superset.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [System Architecture Overview](#system-architecture-overview)
+- [Usage](#usage)
+- [Installation](#installation)
+- [Scripts](#scripts)
+
+## Overview
+End to end pipeline using AWS services (S3, Lambda, Cloudwatch, EMR, Glue, Athena) and Apache Airflow to process several files of input using Spark, and have them stored in a bucket for next day's usage and analytics. This also includes a BI tool, namely Apache Superset, to create a dashboard for visualizing and working on the business requirements.
+
+## System Architecture Overview
+
+For a detailed overview of the system architecture, see [this document](docs/SystemArchitecture.md).
+
+### High-Level Overview
+
+This project uses various components such as AWS S3, Snowflake, CloudWatch, Lambda, Airflow, EMR, Athena, Glue, and Superset to create a comprehensive data processing and analysis pipeline.
 
 ![Architecture_v3](https://github.com/klailatimad/midterm-project-aws-airflow/assets/122483291/209bd8be-7c92-465d-871a-2360b7aa5717)
 
-### This architecture mimics some companies’ ETL process: data files are sent to the company's data lake (S3 bucket) everyday from an internal transaction database. The company first needs to scan the S3 bucket. When the files are ready, the ETL process begins.
+## Usage
 
-### Snowflake:
-Snowflake was used as a transaction database in this project for testing purposes. It is used to import data from a public AWS S3 bucket and create the connection with my AWS S3 bucket and push the data to it.
- 
-### AWS S3:
-S3 was used as a Data Lake for this solution. The data would be pushed from Snowflake on a daily basis and allow Lambda to connect to it.
+This section provides step-by-step instructions to set up and run the AWS Airflow Spark Sales Pipeline project.
 
-### Cloudwatch + Lambda:
-Cloudwatch was used to schedule Lambda to scan the S3 bucket and send a signal to Airflow when the lambda has judged that ‘today’s’ data is ready to be pushed.
+### Preparing the Environment
 
-Since there are multiple files dumped to S3 separately, it is not convenient to use S3 trigger for Lambda because we wouldn't know when to trigger the Lambda. Instead of using S3 event triggers for lambda, Cloudwatch is used  to schedule the Lambda function.
+1. **Clone the Repository**: Clone the GitHub repository to your local machine.
 
-Cloudwatch schedule was created using Cron expression to plan when to trigger lambda (since raw data is dumped to S3 at 2 am every night, we can schedule triggers at 3 am, 3:30 am 2 times to trigger lambda) .
+2. **Snowflake Setup**:
+   - **Initialize Snowflake**: Ensure you have a Snowflake account and start your instance.
+   - **Load Data**: Populate your Snowflake database with the necessary data.
+   - **Create S3 Stage**: Configure an S3 stage in your Snowflake instance for data import/export.
 
-### Airflow:
-Airflow is installed as a Docker in an AWS EC2 instance.
+3. **AWS Setup**:
+   - **Configure AWS Account**: Ensure your AWS account is set up and configured properly.
+   - **Create S3 Bucket**: Initialize an S3 bucket to store your data.
 
-After Lambda sends a signal to Airflow, the Airflow will unpack the data from Lambda as the parameter for EMR. 
+4. **Schedule Tasks**:
+   - **Snowflake Scheduler**: Schedule a task in Snowflake to dump data into your S3 bucket.
+   - **CloudWatch Schedule**: Use CloudWatch and a Cron expression to set up a schedule that will trigger your AWS Lambda functions.
 
-### EMR:
-EMR is triggered by Airflow in the preceding step. EMR will use the files in the S3 bucket where raw data is dumped. Pyspark running in EMR will do the following tasks:
+### Pipeline Execution
 
-Task 1: Read data from S3.
-Task 2: Perform data transformation process to generate a dataframe to meet the following business requirements.
+5. **Lambda Functions**:
+   - **File Readiness Check**: Scan the S3 bucket to check if all of today's files are ready. If they are, send a signal to Airflow to trigger the EMR.
+   - **Notification**: If the files are not ready, Lambda sends an email notification using AWS SES service.
 
-#### The table will be grouped by each week, each store, each product to calculate the following metrics:
+6. **IAM Role Configuration**: Create a new IAM Role for the EC2 instance so that it can communicate with the EMR cluster and the S3 buckets.
 
-- total sales quantity of a product : Sum(sales_qty)
-- total sales amount of a product : Sum(sales_amt) 
-- average sales Price: Sum(sales_amt)/Sum(sales_qty) 
-- stock level by the end of the week : stock_on_hand_qty by the end of the week (only the stock level at the end day of the week)
-- store on Order level by then end of the week: ordered_stock_qty by the end of the week (only the ordered stock quantity at the end day of the week)
-- total cost of the week: Sum(cost_amt)
-- the percentage of Store In-Stock: (how many times of out_of_stock in a week) / days of a week (7 days) 
-- total Low Stock Impact: sum (out_of+stock_flg + Low_Stock_flg*)  
-- potential Low Stock Impact: if Low_Stock_Flg* =TRUE then SUM(sales_amt - stock_on_hand_amt) 
-- no Stock Impact: if out_of_stock_flg=true, then sum(sales_amt)
-- low Stock Instances: Calculate how many times of Low_Stock_Flg* in a week
-- no Stock Instances: Calculate then how many times of out_of_Stock_Flg in a week 
-- how many weeks the on hand stock can supply: (stock_on_hand_qty at the end of the week) / sum(sales_qty)
-###### *(Low Stock_flg = if today's stock_on_hand_qty<sales_qty , then low_stock_flg=1, otherwise =0) * 
+7. **Airflow Installation**: Install Apache Airflow on an AWS EC2 instance.
 
-Task 3: After the transformation is completed, the final dataframe is saved as a parquet file to a new S3 output folder (or a new bucket).
-Also  the files store, product and calendar input files are copied to the new output folder. 
-The new parquet file together with the store, product and calendar files in the output folder will be used for later data analysis with Athena.
+8. **Trigger EMR**: After receiving the signal from Lambda, Airflow unpacks the data and uses it as parameters for EMR.
 
-### Athena and Glue:
-Athena and Glue will connect with the output datalake (AWS S3 bucket) to store the final fact and dimensions tables. This helps with standardization as data sources might change in the future.
-#### Glue:
-The Glue crawler is creatged to scan the schema of the parquet dataframe.
+9. **EMR Operations**:
+   - **Data Read**: PySpark, running in EMR, reads data from the S3 bucket.
+   - **Data Input**: Input files are in .csv format.
+   - **Data Transformation**: It then transforms the data to generate dataframes that meet business requirements. Metrics such as total sales, average price, and stock levels are calculated.
+   - **Data Output**: After the transformation, the final dataframe is saved as a parquet file to a new S3 output folder.
 
-#### Athena:
-Athena is used to query the data and becomes a loading point for the data before it is queried by Superset
+10. **Data Copy**: Copy additional files like store, product, and calendar details (which were previously dumped to the S3 bucket) to the new output folder.
 
-### BI Tool (Superset):
-Given options for the BI side, Superset run as docker was selected to output the results and create a dashboard that can be useful by the business.
-Superset scans the schema using Athena and allows for a dashboard to be created based on the questions that were answered in this project.
+11. **Athena and Glue Configuration**: Establish connections between Athena, Glue, and the S3 bucket that stores your final tables.
+
+12. **Dashboarding and Reporting**: Use Apache Superset to connect to Athena and generate visualized reports as the final output.
+
+
+## Installation
+
+### Pre-requisites
+
+- **AWS Account**: Sign up for an [AWS Account](https://aws.amazon.com/)
+- **Docker**: Download and install [Docker](https://www.docker.com/products/docker-desktop)
+- **Snowflake**: Create an account on [Snowflake](https://www.snowflake.com/)
+- **Python 3.7**: Download and install [Python 3.7](https://www.python.org/downloads/)
+
+### Steps
+
+1. **Clone the Repository**
+   - Use `git clone https://github.com/klailatimad/aws-airflow-spark-sales-pipeline/` to clone this repository to your local machine.
+
+2. **Install Required Packages**
+   - Manually install any dependencies you may need. If you're using Python, packages can be installed using `pip`.
+
+3. **Set Up AWS Configuration**
+   - Make sure your AWS credentials are set up properly for programmatic access. You can set this up through the [AWS Management Console](https://aws.amazon.com/console/) or by editing your `~/.aws/credentials` file.
+
+4. **Initialize Snowflake Account**
+   - If you haven't set up Snowflake, refer to the [Snowflake Documentation](https://docs.snowflake.com/en/user-guide/intro-key-concepts.html).
+
+5. **Prepare S3 Bucket**
+   - Follow the [AWS Documentation for S3 Bucket Setup](https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html).
+
+6. **Airflow Setup**
+   - While there isn't a dedicated section on installing Airflow, you will need it for this project. You can refer to the [official Airflow installation guide](https://airflow.apache.org/docs/apache-airflow/stable/start.html) for instructions.
+
+7. **Run the Pipeline**
+   - Follow the instructions in [Usage](#usage) for pipeline execution, from setting up AWS Lambda functions to visualizing results in Apache Superset.
+
+8. **Verify the Results**
+   - Check the S3 bucket to confirm that the Parquet files have been saved correctly. 
+   - Additionally, you can check the Apache Superset dashboard to see if the analytics are displaying as expected.
+
+9. **Optional: Set up Monitoring**
+   - Configure [CloudWatch alerts](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html) or any other monitoring tools you wish to use for real-time tracking of the pipeline's performance.
+
+
+## Scripts
+
+- `EMR_pyspark.py` [Script](EMR_pyspark.py): This script takes the date and file inputs, starts a SparkSession, maps each input file to a Spark dataframe, and performs the calculations required to answer the business questions. It joins the calculated tables and saves the result in parquet format in the output S3 bucket.
+  - For details on the metrics calculated by this script, see [METRICS.md](METRICS.md).
+- `lambda_function.py`: Responsible for reading the files from the S3 bucket, comparing them against expected files. If matching, then send data to Airflow. If not matching, then send email using `send_email.py`.
+- `project_dag.py` [Script](project_dag.py): Airflow Directed Acyclic Graph definition for parsing data from AWS Lambda and for utilizing EmrAddStepsOperator & EmrStepSensor.
+- `send_email.py` [Script](send_email.py): Utility script for sending an email using AWS SES in case of a failed AWS Lambda function.
+- `snowflake_db.sql` [Script](snowflake_db.sql): SQL commands for setting up Snowflake database for creating tables with schema, creating S3 stage, and S3 integration. It also creates a Snowflake task to be triggered every day at 2 am EST.
