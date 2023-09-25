@@ -111,9 +111,9 @@ This section provides step-by-step instructions to set up and run the AWS Airflo
 
 ## Scripts
 
-- `EMR_pyspark.py` [Script](EMR_pyspark.py): This script takes the date and file inputs, starts a SparkSession, maps each input file to a Spark dataframe, and performs the calculations required to answer the business questions. It joins the calculated tables and saves the result in parquet format in the output S3 bucket.
+- [EMR_pyspark.py](EMR_pyspark.py): This script takes the date and file inputs, starts a SparkSession, maps each input file to a Spark dataframe, and performs the calculations required to answer the business questions. It joins the calculated tables and saves the result in parquet format in the output S3 bucket.
   - For details on the metrics calculated by this script, see [METRICS.md](/docs/METRICS.md).
-- `lambda_function.py`: Responsible for reading the files from the S3 bucket, comparing them against expected files. If matching, then send data to Airflow. If not matching, then send email using `send_email.py`.
-- `project_dag.py` [Script](project_dag.py): Airflow Directed Acyclic Graph definition for parsing data from AWS Lambda and for utilizing EmrAddStepsOperator & EmrStepSensor.
-- `send_email.py` [Script](send_email.py): Utility script for sending an email using AWS SES in case of a failed AWS Lambda function.
-- `snowflake_db.sql` [Script](snowflake_db.sql): SQL commands for setting up Snowflake database for creating tables with schema, creating S3 stage, and S3 integration. It also creates a Snowflake task to be triggered every day at 2 am EST.
+- [lambda_function.py](lambda_function.py): Responsible for reading the files from the S3 bucket, comparing them against expected files. If matching, then send data to Airflow. If not matching, then send email using `send_email.py`.
+- [project_dag.py](project_dag.py): Airflow Directed Acyclic Graph definition for parsing data from AWS Lambda and for utilizing EmrAddStepsOperator & EmrStepSensor.
+- [send_email.py](send_email.py): Utility script for sending an email using AWS SES in case of a failed AWS Lambda function.
+- [snowflake_db.sql](snowflake_db.sql): SQL commands for setting up Snowflake database for creating tables with schema, creating S3 stage, and S3 integration. It also creates a Snowflake task to be triggered every day at 2 am EST.
