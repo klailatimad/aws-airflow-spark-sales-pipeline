@@ -1,4 +1,4 @@
-# AWS Airflow Spark Sales Pipeline
+# End-to-End Sales Data Pipeline Using AWS, Airflow, and Spark
 
 An end-to-end data pipeline using AWS and Apache Airflow to process sales data, with analytics dashboarding via Apache Superset.
 
